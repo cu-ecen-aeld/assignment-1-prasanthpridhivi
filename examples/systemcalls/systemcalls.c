@@ -1,4 +1,9 @@
 #include "systemcalls.h"
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -9,15 +14,10 @@
 */
 bool do_system(const char *cmd)
 {
-
-/*
- * TODO  add your code here
- *  Call the system() function with the command set in the cmd
- *   and return a boolean true if the system() call completed with success
- *   or false() if it returned a failure
-*/
-
-    return true;
+	if (system(cmd) != 0) {
+		return false;
+	}
+    	return true;
 }
 
 /**
@@ -45,23 +45,25 @@ bool do_exec(int count, ...)
         command[i] = va_arg(args, char *);
     }
     command[count] = NULL;
-    // this line is to avoid a compile warning before your implementation is complete
-    // and may be removed
-    command[count] = command[count];
 
-/*
- * TODO:
- *   Execute a system command by calling fork, execv(),
- *   and wait instead of system (see LSP page 161).
- *   Use the command[0] as the full path to the command to execute
- *   (first argument to execv), and use the remaining arguments
- *   as second argument to the execv() command.
- *
-*/
+    
+    char * path_command = command[0];
+    if (path_command[0] != '/') {
+	    return false;
+    }
+    
+    pid_t pid;
+    pid = fork();
+    if (pid == 0) { // child
+	execv(path_command, command);	
+    }
+    int status;
+    waitpid(pid, &status, 0);
+
 
     va_end(args);
 
-    return true;
+    return (status == 0) ? true : false;
 }
 
 /**
@@ -79,10 +81,25 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     {
         command[i] = va_arg(args, char *);
     }
+    char * path_command = command[0];
     command[count] = NULL;
-    // this line is to avoid a compile warning before your implementation is complete
-    // and may be removed
-    command[count] = command[count];
+
+    if (path_command[0] != '/') {
+	return false;
+    }
+    
+    pid_t pid;
+    pid = fork();
+    if (pid == 0) { // child
+    	int fd = open(outputfile, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+
+    	dup2(fd, 1);   // make stdout go to file
+
+    	close(fd);     // fd no longer needed - the dup'ed handles are sufficient
+    	execv(path_command, command);	
+    }
+    int status;
+    waitpid(pid, &status, 0);
 
 
 /*
