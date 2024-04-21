@@ -3,4 +3,4 @@
 	url = https://github.com/cu-ecen-aeld/assignment-autotest.git
 [submodule "aesd-assignments"]
 	path = aesd-assignments 
-	url = https://github.com/cu-ecen-aeld/assignment-prasanthpridhivi 
+	url = https://github.com/cu-ecen-aeld/assignment-prasanthpridhivi.git 
